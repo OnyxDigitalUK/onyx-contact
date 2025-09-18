@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Onyx Digital | Contact</title>
+  <meta name="description" content="Contact Onyx Digital — web design & development in Nottingham" />
+  <style>
+    :root{--bg:#0f0f10;--card:#1e1e1e;--muted:#9aa3b2;--glass:rgba(255,255,255,0.03)}
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;font-family:Inter, system-ui, -apple-system, 'Helvetica Neue', Arial;
+      background:linear-gradient(135deg,#07070a 0%,#121217 100%);
+      color:#eef2f6;display:flex;align-items:center;justify-content:center;padding:24px;
+    }
+
+    .card{
+      width:100%;max-width:520px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border:1px solid rgba(255,255,255,0.03);backdrop-filter:blur(6px);padding:32px;border-radius:16px;box-shadow:0 12px 40px rgba(2,6,23,0.7);
+    }
+
+    header{display:flex;flex-direction:column;align-items:center;margin-bottom:18px}
+    h1{margin:0;font-size:1.6rem;letter-spacing:0.6px;background:linear-gradient(90deg,#00c6ff,#0072ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    p.lead{margin:8px 0 0;color:var(--muted);text-align:center}
+
+    form{display:flex;flex-direction:column;gap:12px;margin-top:6px}
+    label{font-size:0.85rem;color:var(--muted)}
+    input,textarea,button{font:inherit}
+    .row{display:flex;gap:12px}
+    .row > input{flex:1}
+
+    input[type=text],input[type=email],textarea{
+      width:100%;padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:var(--card);color:inherit;transition:box-shadow .15s,border-color .15s
+    }
+    input::placeholder,textarea::placeholder{color:#8f98a3}
+    input:focus,textarea:focus{outline:none;border-color:rgba(0,114,255,0.95);box-shadow:0 6px 20px rgba(0,114,255,0.08)}
+    textarea{min-height:140px;resize:vertical}
+
+    .actions{display:flex;align-items:center;gap:12px;margin-top:4px}
+    button{padding:12px 16px;border-radius:10px;border:none;background:linear-gradient(90deg,#00c6ff,#0072ff);color:#fff;font-weight:700;cursor:pointer;box-shadow:0 8px 24px rgba(0,114,255,0.12);transition:transform .15s}
+    button[disabled]{opacity:0.7;cursor:default}
+    button:hover:not([disabled]){transform:translateY(-3px)}
+
+    .status{margin-left:auto;padding:8px 12px;border-radius:10px;font-weight:600;display:none}
+    .status.show{display:inline-block}
+    .status.success{background:linear-gradient(180deg, rgba(0,255,150,0.06), rgba(0,255,150,0.03));color:#7ef0b1;border:1px solid rgba(126,240,177,0.12)}
+    .status.error{background:linear-gradient(180deg, rgba(255,80,80,0.04), rgba(255,80,80,0.02));color:#ffb3b3;border:1px solid rgba(255,80,80,0.08)}
+
+    .footer{margin-top:18px;text-align:center;font-size:0.85rem;color:var(--muted)}
+
+    @media (max-width:520px){.card{padding:20px}}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <header>
+      <h1>Onyx Digital</h1>
+      <p class="lead">Nottingham-based web design — tell us about your project and we'll get back to you.</p>
+    </header>
+
+    <!-- Contact form (uses Formspree endpoint) -->
+    <form id="contact-form" action="https://formspree.io/f/xnnbkeye" method="POST">
+      <input type="hidden" name="_subject" value="Onyx Digital enquiry" />
+
+      <label for="name">Name</label>
+      <input id="name" name="name" type="text" placeholder="Your name" required />
+
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" placeholder="you@domain.com" required />
+
+      <label for="message">Message</label>
+      <textarea id="message" name="message" placeholder="Tell us about your project (approx. budget, timeline, links)..." required></textarea>
+
+      <div class="actions">
+        <button type="submit">Send Message</button>
+        <div id="status" class="status" role="status" aria-live="polite"></div>
+      </div>
+    </form>
+
+    <div class="footer">© 2025 Onyx Digital — Nottingham</div>
+  </div>
+
+  <script>
+    (function (){
+      const form = document.getElementById('contact-form');
+      const status = document.getElementById('status');
+      const submitBtn = form.querySelector('button[type="submit"]');
+
+      function showStatus(message, type){
+        status.textContent = message;
+        status.className = 'status show ' + (type === 'success' ? 'success' : 'error');
+      }
+
+      form.addEventListener('submit', async function(e){
+        e.preventDefault();
+        // UI
+        showStatus('', '');
+        submitBtn.disabled = true;
+        const oldText = submitBtn.textContent;
+        submitBtn.textContent = 'Sending...';
+
+        const formData = new FormData(form);
+
+        try{
+          const res = await fetch(form.action, {
+            method: 'POST',
+            headers: { 'Accept': 'application/json' },
+            body: formData
+          });
+
+          if (res.ok) {
+            form.reset();
+            showStatus('Thanks — your message has been sent!', 'success');
+          } else {
+            // try to read JSON error from Formspree
+            let data;
+            try { data = await res.json(); } catch(err) { data = null; }
+            const msg = (data && data.error) ? data.error : 'Oops — there was a problem sending your message.';
+            showStatus(msg, 'error');
+          }
+        } catch (err){
+          showStatus('Network error — please try again.', 'error');
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = oldText;
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
